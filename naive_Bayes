@@ -1,0 +1,67 @@
+colors <- c("setosa" = "red", "versicolor" = "green3", "virginica" = "blue")
+plot(iris[, 3:4], pch = 21, bg = colors[iris$Species], col = colors[iris$Species])
+
+CoreGauss <- function(point) {
+  (2*pi)^(-0.5)*exp(-0.5*point^2)
+}
+
+naiveBayesianClassifier <- function(point, lambda, Core) { 
+  n <- 3:4 # numbers of features
+  l <- dim(iris)[1] # 150
+  m <- length(levels(iris$Species)) # number of classes (3)
+  
+  P_apriori <- c() # apriori probability
+  for(i in 1:m) {
+    P_apriori[i] <- 0
+  }
+  
+  p <- c() # distribution density
+  for(i in 1:m) {
+    p[i] <- 0
+  }
+  
+  answer <- data.frame(1:m, levels(iris$Species))
+  colnames(answer) <- c("OptimalBayesianRule", "Species")
+  
+  # Split into subclasses
+  for(i in 1:m) { 
+    subclass <- iris[iris$Species == levels(iris$Species)[i], ] 
+    P_apriori[i] <- nrow(subclass) / l # calculation of apriori probability
+
+    for(k in 1:nrow(subclass)) {
+      for(j in n) {
+        if(Core((point[j] - subclass[i, j]) / h[i]) > 0) # condition for the existence of a logarithm
+          p[i] <- p[i] + log(Core((point[j] - subclass[i, j]) / h[i]) * (1 / h[i]))
+      }
+    }
+    
+    if(p[i] != 0) {
+      p[i] <- p[i] - log(nrow(subclass))
+      answer[i, 1] <- (log(lambda[i] * P_apriori[i]) + p[i])
+    } else answer[i, 1] <- log(lambda[i] * P_apriori[i])
+  }
+  print(p)
+  print(answer)
+  return(answer[which.max(answer[ , 1]), 2])
+}
+
+Core <- CoreGauss
+h <- c()
+for(i in 1:dim(iris)[1]) {
+  h[i] <- 0.2
+}
+lambda <- c(1, 1, 1)
+
+col3 <- seq(from = min(iris[, 3]), to = max(iris[, 3]), by = 0.1)
+col4 <- seq(from = min(iris[, 4]), to = max(iris[, 4]), by = 0.1)
+
+for(i in col3) {
+  for(j in col4) {
+    point <- c(0, 0, i, j)
+    points(point[3], point[4],  pch = 21, bg = "white", col = colors[naiveBayesianClassifier(point, lambda, Core)])
+  }
+}
+
+points(iris[, 3:4], pch = 21, bg = colors[iris$Species], col = colors[iris$Species])
+
+legend("bottomright", c("virginica", "versicolor", "setosa"), pch = c(15,15,15), col = c("blue", "green3", "red"))
